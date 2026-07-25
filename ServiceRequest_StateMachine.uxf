@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="15.1.0">
+  <zoom_level>10</zoom_level>
+  
+  <!-- Initial State -->
+  <element>
+    <id>UMLSpecialState</id>
+    <coordinates>
+      <x>280</x>
+      <y>30</y>
+      <w>20</w>
+      <h>20</h>
+    </coordinates>
+    <panel_attributes>type=initial</panel_attributes>
+    <additional_attributes/>
+  </element>
+
+  <!-- State 1: Requested -->
+  <element>
+    <id>UMLState</id>
+    <coordinates>
+      <x>210</x>
+      <y>100</y>
+      <w>160</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>Requested
+--
+entry / calculateQuote()</panel_attributes>
+    <additional_attributes/>
+  </element>
+
+  <!-- State 2: Scheduled -->
+  <element>
+    <id>UMLState</id>
+    <coordinates>
+      <x>210</x>
+      <y>220</y>
+      <w>160</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>Scheduled
+--
+entry / assignTechnician()</panel_attributes>
+    <additional_attributes/>
+  </element>
+
+  <!-- State 3: Delayed -->
+  <element>
+    <id>UMLState</id>
+    <coordinates>
+      <x>470</x>
+      <y>220</y>
+      <w>160</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>Delayed
+--
+entry / notifyCustomer()</panel_attributes>
+    <additional_attributes/>
+  </element>
+
+  <!-- State 4: In Progress -->
+  <element>
+    <id>UMLState</id>
+    <coordinates>
+      <x>210</x>
+      <y>340</y>
+      <w>160</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>In Progress
+--
+do / performLawnService()</panel_attributes>
+    <additional_attributes/>
+  </element>
+
+  <!-- State 5: Completed -->
+  <element>
+    <id>UMLState</id>
+    <coordinates>
+      <x>210</x>
+      <y>460</y>
+      <w>160</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>Completed
+--
+entry / sendReceiptPDF()</panel_attributes>
+    <additional_attributes/>
+  </element>
+
+  <!-- State 6: Cancelled -->
+  <element>
+    <id>UMLState</id>
+    <coordinates>
+      <x>20</x>
+      <y>220</y>
+      <w>140</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>Cancelled
+--
+entry / processRefund()</panel_attributes>
+    <additional_attributes/>
+  </element>
+
+  <!-- Final State (Completed) -->
+  <element>
+    <id>UMLSpecialState</id>
+    <coordinates>
+      <x>280</x>
+      <y>560</y>
+      <w>20</w>
+      <h>20</h>
+    </coordinates>
+    <panel_attributes>type=final</panel_attributes>
+    <additional_attributes/>
+  </element>
+
+  <!-- Final State (Cancelled) -->
+  <element>
+    <id>UMLSpecialState</id>
+    <coordinates>
+      <x>80</x>
+      <y>340</y>
+      <w>20</w>
+      <h>20</h>
+    </coordinates>
+    <panel_attributes>type=final</panel_attributes>
+    <additional_attributes/>
+  </element>
+
+  <!-- TRANSITIONS -->
+
+  <!-- Start -> Requested -->
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>280</x>
+      <y>40</y>
+      <w>30</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0</additional_attributes>
+  </element>
+
+  <!-- Requested -> Scheduled -->
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>280</x>
+      <y>140</y>
+      <w>220</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+paymentAuthorized [Valid Address]
+/ chargeDeposit()</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;80.0</additional_attributes>
+  </element>
+
+  <!-- Scheduled -> Delayed -->
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>360</x>
+      <y>220</y>
+      <w>130</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+weatherDelay</panel_attributes>
+    <additional_attributes>10.0;20.0;110.0;20.0</additional_attributes>
+  </element>
+
+  <!-- Delayed -> Scheduled -->
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>360</x>
+      <y>240</y>
+      <w>130</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+weatherCleared</panel_attributes>
+    <additional_attributes>110.0;20.0;10.0;20.0</additional_attributes>
+  </element>
+
+  <!-- Scheduled -> In Progress -->
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>280</x>
+      <y>270</y>
+      <w>180</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+techArrives / logStartTime()</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;70.0</additional_attributes>
+  </element>
+
+  <!-- In Progress -> Completed -->
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>280</x>
+      <y>390</y>
+      <w>210</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+workFinished / settlePayment()</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;70.0</additional_attributes>
+  </element>
+
+  <!-- Completed -> Final -->
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>280</x>
+      <y>510</y>
+      <w>30</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;50.0</additional_attributes>
+  </element>
+
+  <!-- Requested -> Cancelled -->
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>80</x>
+      <y>110</y>
+      <w>150</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+cancelRequest</panel_attributes>
+    <additional_attributes>130.0;20.0;10.0;20.0;10.0;110.0</additional_attributes>
+  </element>
+
+  <!-- Scheduled -> Cancelled -->
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>150</x>
+      <y>230</y>
+      <w>80</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+cancel</panel_attributes>
+    <additional_attributes>60.0;20.0;10.0;20.0</additional_attributes>
+  </element>
+
+  <!-- Cancelled -> Final -->
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>80</x>
+      <y>270</y>
+      <w>30</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;70.0</additional_attributes>
+  </element>
+
+</diagram>
