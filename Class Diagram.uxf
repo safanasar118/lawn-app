@@ -1,0 +1,15 @@
+<diagram program="umletino" version="15.1"><zoom_level>10</zoom_level><element><id>UMLClass</id><coordinates><x>60</x><y>80</y><w>120</w><h>100</h></coordinates><panel_attributes>Customer
+name
+- email
+- address
++ selectPlan()
++ updateProfile()</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>210</x><y>80</y><w>100</w><h>80</h></coordinates><panel_attributes>ServicePlan
+frequency
+- status
++ pause()
++ cancel()</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>340</x><y>80</y><w>110</w><h>80</h></coordinates><panel_attributes>Visit
+- scheduledDate
+- status
++ reschedule()
++ markComplete()</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>340</x><y>230</y><w>100</w><h>30</h></coordinates><panel_attributes>SimpleClass</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>210</x><y>320</y><w>100</w><h>30</h></coordinates><panel_attributes>SimpleClass</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>70</x><y>320</y><w>100</w><h>40</h></coordinates><panel_attributes>ServiceArea
+- zipCodes</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>350</x><y>320</y><w>100</w><h>30</h></coordinates><panel_attributes>SimpleClass</panel_attributes><additional_attributes></additional_attributes></element></diagram>
