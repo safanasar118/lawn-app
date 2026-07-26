@@ -22,14 +22,22 @@ export default function App() {
   const [customers, setCustomers] = useState([]);
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState("");
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [lawnSize, setLawnSize] = useState("");
+  const [instructions, setInstructions] = useState("");
   const [frequency, setFrequency] = useState("Weekly");
 
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+
+  function notify(msg) {
+    setToast(msg);
+    setTimeout(() => setToast(""), 3000);
+  }
 
   async function loadData() {
     setLoading(true);
@@ -46,18 +54,12 @@ export default function App() {
   async function addCustomer() {
     if (!name || !email) return alert("Name and email are required.");
     await addDoc(collection(db, "customers"), {
-      name,
-      email,
-      address,
-      lawnSize,
-      frequency,
-      planStatus: "Active",
+      name, email, phone, address, lawnSize, instructions,
+      frequency, planStatus: "Active",
     });
-    setName("");
-    setEmail("");
-    setAddress("");
-    setLawnSize("");
-    setFrequency("Weekly");
+    setName(""); setEmail(""); setPhone(""); setAddress("");
+    setLawnSize(""); setInstructions(""); setFrequency("Weekly");
+    notify("Account created ✓");
     loadData();
   }
 
@@ -69,6 +71,15 @@ export default function App() {
   async function togglePlan(cust) {
     const next = cust.planStatus === "Active" ? "Paused" : "Active";
     await updateDoc(doc(db, "customers", cust.id), { planStatus: next });
+    notify(`Plan ${next.toLowerCase()} for ${cust.name}`);
+    loadData();
+  }
+
+  async function cyclePlan(cust) {
+    const idx = FREQUENCIES.indexOf(cust.frequency);
+    const nextFreq = FREQUENCIES[(idx + 1) % FREQUENCIES.length];
+    await updateDoc(doc(db, "customers", cust.id), { frequency: nextFreq });
+    notify(`Plan changed to ${nextFreq}`);
     loadData();
   }
 
@@ -84,17 +95,58 @@ export default function App() {
       status: "Scheduled",
       amount: PRICE_PER_VISIT,
     });
+    notify("Visit scheduled + reminder sent to customer");
     loadData();
   }
 
   async function advanceVisit(visit) {
     const idx = VISIT_STATUSES.indexOf(visit.status);
     if (idx < VISIT_STATUSES.length - 1) {
-      await updateDoc(doc(db, "visits", visit.id), {
-        status: VISIT_STATUSES[idx + 1],
-      });
+      const nextStatus = VISIT_STATUSES[idx + 1];
+      await updateDoc(doc(db, "visits", visit.id), { status: nextStatus });
+      if (nextStatus === "Visit Completed") notify("Confirmation sent to customer ✓");
+      if (nextStatus === "Paid & Invoiced") notify("Charged via Square · invoice generated");
       loadData();
     }
+  }
+
+  // FR-5: reschedule with 24-hour rule
+  async function rescheduleVisit(visit) {
+    const input = prompt("New date (YYYY-MM-DD):", visit.scheduledDate);
+    if (!input) return;
+    const newDate = new Date(input);
+    const now = new Date();
+    const hoursAway = (newDate - now) / 3600000;
+    if (hoursAway < 24) {
+      notify("✗ Rejected: must reschedule at least 24 hours in advance");
+      return;
+    }
+    await updateDoc(doc(db, "visits", visit.id), {
+      scheduledDate: input,
+      status: "Scheduled",
+    });
+    notify("Visit rescheduled · customer notified");
+    loadData();
+  }
+
+  // FR-6: skip a visit
+  async function skipVisit(visit) {
+    await updateDoc(doc(db, "visits", visit.id), { status: "Skipped" });
+    notify("Visit skipped · customer notified");
+    loadData();
+  }
+
+  // FR-10: retry a failed payment
+  async function retryPayment(visit) {
+    await updateDoc(doc(db, "visits", visit.id), { status: "Paid & Invoiced" });
+    notify("Payment retried via Square ✓");
+    loadData();
+  }
+
+  async function failPayment(visit) {
+    await updateDoc(doc(db, "visits", visit.id), { status: "Payment Failed" });
+    notify("✗ Payment failed · customer notified to retry");
+    loadData();
   }
 
   async function deleteVisit(id) {
@@ -108,6 +160,8 @@ export default function App() {
 
   return (
     <div style={S.page}>
+      {toast && <div style={S.toast}>{toast}</div>}
+
       <header style={S.header}>
         <h1 style={S.h1}>🌱 GreenBlade Lawn Care</h1>
         <p style={S.sub}>Recurring lawn mowing — customer & visit management</p>
@@ -120,8 +174,10 @@ export default function App() {
         <div style={S.formGrid}>
           <input style={S.input} placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} />
           <input style={S.input} placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input style={S.input} placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
           <input style={S.input} placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} />
           <input style={S.input} placeholder="Lawn size (e.g. Medium)" value={lawnSize} onChange={(e) => setLawnSize(e.target.value)} />
+          <input style={S.input} placeholder="Special instructions" value={instructions} onChange={(e) => setInstructions(e.target.value)} />
           <select style={S.input} value={frequency} onChange={(e) => setFrequency(e.target.value)}>
             {FREQUENCIES.map((f) => <option key={f}>{f}</option>)}
           </select>
@@ -135,8 +191,8 @@ export default function App() {
         {customers.map((c) => (
           <div key={c.id} style={S.row}>
             <div style={{ flex: 1 }}>
-              <strong>{c.name}</strong> <span style={S.muted}>· {c.email}</span><br />
-              <span style={S.muted}>{c.address} · Lawn: {c.lawnSize || "—"}</span><br />
+              <strong>{c.name}</strong> <span style={S.muted}>· {c.email} · {c.phone}</span><br />
+              <span style={S.muted}>{c.address} · Lawn: {c.lawnSize || "—"}{c.instructions ? ` · "${c.instructions}"` : ""}</span><br />
               <span style={S.badge}>{c.frequency}</span>
               <span style={{ ...S.badge, background: c.planStatus === "Active" ? "#DCF3E4" : "#F3E4DC" }}>
                 Plan: {c.planStatus}
@@ -144,9 +200,10 @@ export default function App() {
             </div>
             <div style={S.actions}>
               <button style={S.btn} onClick={() => generateVisit(c)}>+ Schedule Visit</button>
+              <button style={S.btn} onClick={() => cyclePlan(c)}>Change Plan</button>
               <button style={S.btn} onClick={() => togglePlan(c)}>{c.planStatus === "Active" ? "Pause" : "Resume"}</button>
               <button style={S.btn} onClick={() => setSelectedCustomer(selectedCustomer === c.id ? null : c.id)}>
-                {selectedCustomer === c.id ? "Show all visits" : "View visits"}
+                {selectedCustomer === c.id ? "Show all" : "View visits"}
               </button>
               <button style={S.dangerBtn} onClick={() => deleteCustomer(c.id)}>Delete</button>
             </div>
@@ -168,10 +225,22 @@ export default function App() {
               <span style={{ ...S.badge, background: statusColor(v.status) }}>{v.status}</span>
             </div>
             <div style={S.actions}>
-              {v.status !== "Paid & Invoiced" && (
+              {v.status !== "Paid & Invoiced" && v.status !== "Skipped" && v.status !== "Payment Failed" && (
                 <button style={S.primaryBtn} onClick={() => advanceVisit(v)}>
                   {nextLabel(v.status)}
                 </button>
+              )}
+              {v.status === "Scheduled" && (
+                <>
+                  <button style={S.btn} onClick={() => rescheduleVisit(v)}>Reschedule</button>
+                  <button style={S.btn} onClick={() => skipVisit(v)}>Skip</button>
+                </>
+              )}
+              {v.status === "Visit Completed" && (
+                <button style={S.btn} onClick={() => failPayment(v)}>Simulate Fail</button>
+              )}
+              {v.status === "Payment Failed" && (
+                <button style={S.primaryBtn} onClick={() => retryPayment(v)}>Retry Payment</button>
               )}
               <button style={S.dangerBtn} onClick={() => deleteVisit(v.id)}>Delete</button>
             </div>
@@ -200,12 +269,14 @@ function statusColor(status) {
     case "In Progress": return "#F3EFDC";
     case "Visit Completed": return "#E9DCF3";
     case "Paid & Invoiced": return "#DCF3E4";
+    case "Skipped": return "#EEE";
+    case "Payment Failed": return "#F5D6D6";
     default: return "#eee";
   }
 }
 
 const S = {
-  page: { maxWidth: 860, margin: "0 auto", padding: "24px 16px 64px", fontFamily: "system-ui, sans-serif", color: "#1a1a1a" },
+  page: { maxWidth: 900, margin: "0 auto", padding: "24px 16px 64px", fontFamily: "system-ui, sans-serif", color: "#1a1a1a" },
   header: { marginBottom: 20 },
   h1: { margin: 0, fontSize: 28 },
   sub: { margin: "4px 0 0", color: "#666" },
@@ -221,4 +292,5 @@ const S = {
   badge: { display: "inline-block", padding: "2px 9px", borderRadius: 20, background: "#eee", fontSize: 12, marginRight: 6, marginTop: 4 },
   muted: { color: "#888", fontSize: 13 },
   footer: { textAlign: "center", color: "#aaa", fontSize: 12, marginTop: 24 },
+  toast: { position: "fixed", top: 16, right: 16, background: "#2e7d32", color: "#fff", padding: "10px 16px", borderRadius: 8, fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.2)", zIndex: 100 },
 };
